@@ -120,55 +120,9 @@ body.focus #tb:hover{opacity:1}
 .f{display:block;margin-bottom:10px;font-size:12px;color:var(--mu)}
 .f input,.f textarea,#panel select{display:block;width:100%;box-sizing:border-box;margin-top:4px;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--in);color:var(--tx);font:inherit}
 .f textarea{resize:vertical}
-.sws {
-  display: grid;
-  grid-template-columns: repeat(8, 24px);
-  gap: 9px;
-  margin: 10px 0;
-}
-
-.sw {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid var(--sf);
-  box-shadow: 0 0 0 1px var(--bd);
-  transition: transform .15s, box-shadow .15s;
-}
-
-.sw:hover {
-  transform: scale(1.2);
-}
-
-.sw.on {
-  box-shadow: 0 0 0 2px var(--tx);
-  transform: scale(1.12);
-}
-
-.color-picker {
-  margin: 12px 0;
-}
-
-.custom-color {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding: 7px 9px;
-  border: 1px solid var(--bd);
-  border-radius: 7px;
-  font-size: 12px;
-  color: var(--mu);
-}
-
-.custom-color input {
-  width: 34px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
+.sws{display:flex;gap:6px;margin-bottom:10px}
+.sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--sf);box-shadow:0 0 0 1px var(--bd)}
+.sw.on{box-shadow:0 0 0 2px var(--tx)}
 .row{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
 .lnk{color:var(--ac);text-align:left}
 .x{color:var(--mu);padding:0 4px}
@@ -211,26 +165,8 @@ body.hd.pc #ptg{display:flex;right:8px}
 const $=s=>document.querySelector(s);
 const h=(t,p={},...c)=>{const e=document.createElement(t);for(const k in p){if(k==='on')for(const a in p.on)e.addEventListener(a,p.on[a]);else if(k!=='style'&&k in e)e[k]=p[k];else e.setAttribute(k,p[k])}e.append(...c);return e};
 const sv=(t,p)=>{const e=document.createElementNS('http://www.w3.org/2000/svg',t);for(const k in p)e.setAttribute(k,p[k]);return e};
-const KEY='phase-map-v1',KEY2='phase-map-v2',pid=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),COLORS = [
-  // Basic
-  '#6b7a90', '#3563e9', '#1fa38a',
-  '#d9a21b', '#d9546b', '#8a63d2',
-
-  // Reds & Pinks
-  '#ef4444', '#f87171', '#ec4899', '#f472b6',
-
-  // Oranges & Yellows
-  '#f97316', '#fb923c', '#eab308', '#facc15',
-
-  // Greens
-  '#22c55e', '#84cc16', '#14b8a6', '#10b981',
-
-  // Blues & Cyans
-  '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
-
-  // Purples
-  '#a855f7', '#c084fc'
-];
+const KEY='phase-map-v1',KEY2='phase-map-v2',pid=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),COLORS=['#6b7a90','#3563e9','#1fa38a','#d9a21b','#d9546b','#8a63d2'];
+const vp=$('#vp'),world=$('#world'),eg=$('#eg'),tmp=$('#tmp'),mm=$('#mm');
 let S,sel=new Set(),selEdge=null,mode='select',uid=1,hist=[],hi=-1,drag=null,mb=null;
 const els=new Map(),nid=()=>'n'+Date.now().toString(36)+(uid++);
 const byId=id=>S.nodes.find(n=>n.id===id);
@@ -420,40 +356,7 @@ function setMode(m){mode=m;document.body.dataset.mode=m;document.querySelectorAl
 /* ===== DETAILS PANEL ===== */
 const chk=(l,v,fn)=>h('label',{class:'chk'},h('input',{type:'checkbox',checked:v,on:{change(e){fn(e.target.checked)}}}),l);
 const styleSel=(v,fn)=>{const s=h('select',{on:{change(){fn(s.value)}}},...[['curve','Curved'],['straight','Straight'],['step','Stepped']].map(o=>h('option',{value:o[0],selected:o[0]===v},o[1])));return s};
-function colorPicker(value, onPick) {
-  return h('div', {class:'color-picker'},
-
-    h('div', {class:'sws'},
-      ...COLORS.map(c =>
-        h('button', {
-          type:'button',
-          class:'sw' + (value === c ? ' on' : ''),
-          style:'background:'+c,
-          title:c,
-          'aria-label':'Choose '+c,
-          on:{
-            click(){
-              onPick(c);
-            }
-          }
-        })
-      )
-    ),
-
-    h('label', {class:'custom-color'},
-      'Custom color',
-      h('input', {
-        type:'color',
-        value:value,
-        on:{
-          change(e){
-            onPick(e.target.value);
-          }
-        }
-      })
-    )
-  );
-}
+const fld=(l,i)=>h('label',{class:'f'},l,i);
 function panel(){
   const P=$('#panel');P.replaceChildren(h('div',{class:'pcx'},h('button',{class:'ib',title:'Collapse to a button',on:{click(){ui('panel',1)}}},'–'),h('button',{class:'ib',title:'Close',on:{click(){pj=0;selectNodes([])}}},'✕')));syncD();const E=selEdge&&S.edges.find(e=>e.id===selEdge);
   if(E){
@@ -467,19 +370,11 @@ function panel(){
     const ca=h('input',{value:n.cat,placeholder:'e.g. Research',on:{input(){n.cat=ca.value;re()},change:commit}});
     const tg=h('input',{value:n.tags.join(', '),placeholder:'comma, separated',on:{input(){n.tags=tg.value.split(',').map(t=>t.trim()).filter(Boolean);re()},change:commit}});
     const list=(t,es,k)=>[h('div',{class:'sub'},t+' ('+es.length+')'),...(es.length?es.map(e=>h('div',{class:'row'},h('button',{class:'lnk',on:{click(){selectNodes([e[k]])}}},byId(e[k]).title||'Untitled'),h('button',{class:'x',title:'Remove connection',on:{click(){S.edges=S.edges.filter(x=>x!==e);drawEdges();panel();commit()}}},'✕'))):[h('div',{class:'mu'},'None')])];
-colorPicker(n.color, c => {
-  n.color = c;
-  re();
-  panel();
-  commit();
-}),      ...list('Incoming',S.edges.filter(e=>e.to===n.id),'from'),...list('Outgoing',S.edges.filter(e=>e.from===n.id),'to'),h('button',{class:'btn danger',on:{click:del}},'Delete node'));
+    P.append(h('h3',{},'Node'),h('label',{class:'chk'},h('input',{type:'checkbox',checked:n.done,on:{change(e){setDone(n,e.target.checked)}}}),n.done?'Completed':'Pending: tick to complete'),chk('Collapsed on canvas',!!n.col,v=>{n.col=v;fill(els.get(n.id),n);drawEdges();mini();commit()}),fld('Title',ti),fld('Description',de),fld('Category or phase',ca),fld('Tags',tg),h('div',{class:'sws'},...COLORS.map(c=>h('button',{class:'sw'+(n.color===c?' on':''),style:'background:'+c,title:c,on:{click(){n.color=c;re();panel();commit()}}}))),
+      ...list('Incoming',S.edges.filter(e=>e.to===n.id),'from'),...list('Outgoing',S.edges.filter(e=>e.from===n.id),'to'),h('button',{class:'btn danger',on:{click:del}},'Delete node'));
   }else if(sel.size>1){
-colorPicker('#6366f1', c => {
-  sel.forEach(i => byId(i).color = c);
-  drawNodes();
-  commit();
-  panel();
-}),  }else{
+    P.append(h('h3',{},sel.size+' nodes selected'),h('div',{class:'bar'},h('button',{class:'btn',on:{click(){setMany(true)}}},'Mark completed'),h('button',{class:'btn',on:{click(){setMany(false)}}},'Mark incomplete')),h('div',{class:'sub'}),h('div',{class:'sws'},...COLORS.map(c=>h('button',{class:'sw',style:'background:'+c,title:c,on:{click(){sel.forEach(i=>byId(i).color=c);drawNodes();commit()}}}))),h('button',{class:'btn danger',on:{click:del}},'Delete selected'));
+  }else{
     const nm=h('input',{value:S.set.name,on:{input(){S.set.name=nm.value;document.title=nm.value+' - Phase Map';save();renderProj()}}});
     P.append(h('h3',{},'Project'),fld('Name',nm),chk('Snap nodes to grid',S.set.snap,v=>{S.set.snap=v;save()}),h('div',{class:'sub'},'New connection style'),styleSel(S.set.style,v=>{S.set.style=v;save()}),h('div',{class:'sub'}),
       h('div',{class:'mu'},S.nodes.length+' nodes, '+S.edges.length+' connections'),h('div',{class:'sub'}),h('button',{class:'btn',on:{click:openData}},'Export or import JSON'),
