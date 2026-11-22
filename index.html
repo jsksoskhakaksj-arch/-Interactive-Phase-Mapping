@@ -123,6 +123,18 @@ body.focus #tb:hover{opacity:1}
 .sws{display:flex;gap:6px;margin-bottom:10px}
 .sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--sf);box-shadow:0 0 0 1px var(--bd)}
 .sw.on{box-shadow:0 0 0 2px var(--tx)}
+.cpk{margin-bottom:10px}
+.crow{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px}
+.cprev{flex:none;width:22px;height:22px;border-radius:5px;border:1px solid var(--bd)}
+.chex{flex:1;color:var(--tx);font-variant-numeric:tabular-nums}
+.cpk input[type=color]{width:34px;height:24px;padding:0;border:1px solid var(--bd);border-radius:5px;background:var(--in);cursor:pointer}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.cn{display:block;font-size:10px;color:var(--mu);margin-bottom:2px}
+.cs{display:flex;gap:4px}
+.sw2{position:relative;width:20px;height:20px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18);transition:transform .12s}
+.sw2:hover{transform:scale(1.12)}
+.sw2.on{outline:2px solid var(--tx);outline-offset:1px}
+.sw2.on::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:11px;text-shadow:0 0 2px rgba(0,0,0,.7)}
 .row{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
 .lnk{color:var(--ac);text-align:left}
 .x{color:var(--mu);padding:0 4px}
@@ -357,6 +369,15 @@ function setMode(m){mode=m;document.body.dataset.mode=m;document.querySelectorAl
 const chk=(l,v,fn)=>h('label',{class:'chk'},h('input',{type:'checkbox',checked:v,on:{change(e){fn(e.target.checked)}}}),l);
 const styleSel=(v,fn)=>{const s=h('select',{on:{change(){fn(s.value)}}},...[['curve','Curved'],['straight','Straight'],['step','Stepped']].map(o=>h('option',{value:o[0],selected:o[0]===v},o[1])));return s};
 const fld=(l,i)=>h('label',{class:'f'},l,i);
+/* ----- node color system: 12 categories x 4 presets, plus native custom picker ----- */
+const PALETTE=[['Reds',['#fca5a5','#ef4444','#d9546b','#991b1b']],['Pinks',['#f9a8d4','#ec4899','#db2777','#9d174d']],['Oranges',['#fdba74','#f97316','#ea580c','#9a3412']],['Yellows',['#fde047','#facc15','#d9a21b','#a16207']],['Greens',['#86efac','#22c55e','#16a34a','#166534']],['Teals',['#5eead4','#14b8a6','#1fa38a','#0f766e']],['Cyans',['#67e8f9','#06b6d4','#0891b2','#155e75']],['Blues',['#93c5fd','#3b82f6','#3563e9','#1e40af']],['Purples',['#d8b4fe','#a855f7','#8a63d2','#6b21a8']],['Violets',['#c4b5fd','#8b5cf6','#7c3aed','#4c1d95']],['Grays',['#d1d5db','#9ca3af','#6b7a90','#4b5563']],['Neutrals',['#e7e5e4','#a8a29e','#78716c','#44403c']]];
+const hex6=c=>{c=String(c||'#000000');if(/^#[0-9a-f]{3}$/i.test(c))c='#'+[...c.slice(1)].map(x=>x+x).join('');return c.slice(0,7).toLowerCase()};
+function multiCur(){const a=[...sel].map(i=>hex6(byId(i).color));return a.every(c=>c===a[0])?a[0]:null}
+function colorPicker(cur,apply,done){
+  const hv=cur?hex6(cur):'#808080',prev=h('i',{class:'cprev',style:'background:'+hv}),lab=h('span',{class:'chex'},cur?hv.toUpperCase():'Mixed colors');
+  const pk=h('input',{type:'color',value:hv,title:'Pick any custom color',on:{input(){prev.style.background=pk.value;lab.textContent=pk.value.toUpperCase();apply(pk.value)},change(){done()}}});
+  return h('div',{class:'cpk'},h('div',{class:'crow'},prev,lab,pk),h('div',{class:'cgrid'},...PALETTE.map(([n,cs])=>h('div',{},h('span',{class:'cn'},n),h('div',{class:'cs'},...cs.map(c=>h('button',{class:'sw2'+(cur&&hex6(cur)===c?' on':''),style:'background:'+c,title:c.toUpperCase(),'aria-label':n+' '+c,on:{click(){apply(c);done()}}})))))));
+}
 function panel(){
   const P=$('#panel');P.replaceChildren(h('div',{class:'pcx'},h('button',{class:'ib',title:'Collapse to a button',on:{click(){ui('panel',1)}}},'–'),h('button',{class:'ib',title:'Close',on:{click(){pj=0;selectNodes([])}}},'✕')));syncD();const E=selEdge&&S.edges.find(e=>e.id===selEdge);
   if(E){
@@ -370,10 +391,10 @@ function panel(){
     const ca=h('input',{value:n.cat,placeholder:'e.g. Research',on:{input(){n.cat=ca.value;re()},change:commit}});
     const tg=h('input',{value:n.tags.join(', '),placeholder:'comma, separated',on:{input(){n.tags=tg.value.split(',').map(t=>t.trim()).filter(Boolean);re()},change:commit}});
     const list=(t,es,k)=>[h('div',{class:'sub'},t+' ('+es.length+')'),...(es.length?es.map(e=>h('div',{class:'row'},h('button',{class:'lnk',on:{click(){selectNodes([e[k]])}}},byId(e[k]).title||'Untitled'),h('button',{class:'x',title:'Remove connection',on:{click(){S.edges=S.edges.filter(x=>x!==e);drawEdges();panel();commit()}}},'✕'))):[h('div',{class:'mu'},'None')])];
-    P.append(h('h3',{},'Node'),h('label',{class:'chk'},h('input',{type:'checkbox',checked:n.done,on:{change(e){setDone(n,e.target.checked)}}}),n.done?'Completed':'Pending: tick to complete'),chk('Collapsed on canvas',!!n.col,v=>{n.col=v;fill(els.get(n.id),n);drawEdges();mini();commit()}),fld('Title',ti),fld('Description',de),fld('Category or phase',ca),fld('Tags',tg),h('div',{class:'sws'},...COLORS.map(c=>h('button',{class:'sw'+(n.color===c?' on':''),style:'background:'+c,title:c,on:{click(){n.color=c;re();panel();commit()}}}))),
+    P.append(h('h3',{},'Node'),h('label',{class:'chk'},h('input',{type:'checkbox',checked:n.done,on:{change(e){setDone(n,e.target.checked)}}}),n.done?'Completed':'Pending: tick to complete'),chk('Collapsed on canvas',!!n.col,v=>{n.col=v;fill(els.get(n.id),n);drawEdges();mini();commit()}),fld('Title',ti),fld('Description',de),fld('Category or phase',ca),fld('Tags',tg),colorPicker(n.color,c=>{n.color=c;re()},()=>{commit();panel()}),
       ...list('Incoming',S.edges.filter(e=>e.to===n.id),'from'),...list('Outgoing',S.edges.filter(e=>e.from===n.id),'to'),h('button',{class:'btn danger',on:{click:del}},'Delete node'));
   }else if(sel.size>1){
-    P.append(h('h3',{},sel.size+' nodes selected'),h('div',{class:'bar'},h('button',{class:'btn',on:{click(){setMany(true)}}},'Mark completed'),h('button',{class:'btn',on:{click(){setMany(false)}}},'Mark incomplete')),h('div',{class:'sub'}),h('div',{class:'sws'},...COLORS.map(c=>h('button',{class:'sw',style:'background:'+c,title:c,on:{click(){sel.forEach(i=>byId(i).color=c);drawNodes();commit()}}}))),h('button',{class:'btn danger',on:{click:del}},'Delete selected'));
+    P.append(h('h3',{},sel.size+' nodes selected'),h('div',{class:'bar'},h('button',{class:'btn',on:{click(){setMany(true)}}},'Mark completed'),h('button',{class:'btn',on:{click(){setMany(false)}}},'Mark incomplete')),h('div',{class:'sub'}),colorPicker(multiCur(),c=>{sel.forEach(i=>{const m=byId(i);m.color=c;fill(els.get(i),m)});mini()},()=>{commit();panel()}),h('button',{class:'btn danger',on:{click:del}},'Delete selected'));
   }else{
     const nm=h('input',{value:S.set.name,on:{input(){S.set.name=nm.value;document.title=nm.value+' - Phase Map';save();renderProj()}}});
     P.append(h('h3',{},'Project'),fld('Name',nm),chk('Snap nodes to grid',S.set.snap,v=>{S.set.snap=v;save()}),h('div',{class:'sub'},'New connection style'),styleSel(S.set.style,v=>{S.set.style=v;save()}),h('div',{class:'sub'}),
